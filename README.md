@@ -15,7 +15,7 @@ To set up FashChat on your local machine, follow these steps:
 ### 1. Clone the Repository
 
 ```bash
-git clone https://github.com/your-username/fashchat.git
+git clone https://github.com/Usha66/fashchat.git
 cd fashchat
 ```
 
