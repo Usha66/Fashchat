@@ -3,17 +3,32 @@ import streamlit as st
 import os
 import google.generativeai as genai
 from PIL import Image
+from pathlib import Path
 
 # Load environment variables
 load_dotenv()  
 
+# Ensure the API key is available
+api_key = os.getenv("GOOGLE_API_KEY")
+if not api_key:
+    st.error("Google API key is missing or invalid. Please check your .env file.")
+    st.stop()  # Stop further execution if the API key is missing
+
 # Configure Google API
-genai.configure(api_key=os.getenv("GOOGLE_API_KEY"))
+genai.configure(api_key=api_key)
 
 # Function to load and setup the uploaded image
 def input_image_setup(uploaded_file):
     if uploaded_file is not None:
+        # Validate file type
+        if uploaded_file.type not in ["image/jpeg", "image/png"]:
+            raise ValueError("Invalid file type. Please upload a JPEG or PNG image.")
+        
+        # Validate file size
         bytes_data = uploaded_file.getvalue()
+        if len(bytes_data) > 5 * 1024 * 1024:  # Limit size to 5 MB
+            raise ValueError("File size exceeds 5 MB. Please upload a smaller file.")
+        
         image_parts = [
             {
                 "mime_type": uploaded_file.type,
@@ -33,19 +48,24 @@ def get_fashion_analysis(image, prompt):
         response = model.generate_content([prompt])
     return response.text
 
+# Ensure the logo file path is dynamically located
+logo_path = Path("lo.png")  # Assuming the logo is in the same directory as the script
+if not logo_path.exists():
+    st.error("Logo file not found. Please ensure 'lo.png' is present in the application directory.")
+    st.stop()
+
+# Load and display the logo
+logo = Image.open(logo_path)
+
 # Initialize the Streamlit app
 st.set_page_config(page_title="FashChat: Your Timeless Fashion Analyzer")
 
-# Display the logo
-logo = Image.open(r"C:\Users\usha\Downloads\lo.png")  # Ensure this path points to your logo image
-
-# Use markdown to display the logo and title next to each other
+# Display the logo and title
 col1, col2 = st.columns([2, 6])  # Adjust the ratios as needed
 with col1:
     st.image(logo, width=150)  # Adjust width as necessary
 with col2:
     st.markdown("<h1 style='margin:0;'>Your Timeless Fashion Analyzer</h1>", unsafe_allow_html=True)
-
 
 analysis_type = st.selectbox("Choose an analysis type:", 
                               [
